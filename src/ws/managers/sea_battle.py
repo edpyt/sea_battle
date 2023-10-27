@@ -2,8 +2,8 @@ import asyncio
 
 from fastapi import WebSocket
 
-from src.api.ws.managers.redis import RedisPubSubManager
 from src.core.services.board import GameBoard, ShipCountsOver
+from src.ws.managers.redis import RedisPubSubManager
 
 
 class SeaBattleManager:
@@ -97,3 +97,6 @@ class SeaBattleManager:
             await connection.send_text(f'Not found ship with type: {ship_type}')
         else:
             await connection.send_text('Ok!')
+
+
+sea_battle_ws_manager = SeaBattleManager()
