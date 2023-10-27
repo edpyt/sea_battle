@@ -1,37 +1,36 @@
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
 
-from .base import Base
-from .user import User
+from beanie import Document, Link, TimeSeriesConfig
+from pydantic import Field
 
-
-class Game(Base):
-    __tablename__ = 'games'
-    
-    id: Mapped[int] = mapped_column(
-        'id', autoincrement=True, nullable=False, unique=True, primary_key=True
-    )
-    player_1_id: Mapped[int] = mapped_column(
-        'player_1_id', ForeignKey('users.id'), nullable=False
-    )
-    player_2_id: Mapped[int] = mapped_column(
-        'player_2_id', ForeignKey('users.id'), nullable=False
-    )
+from src.infrastructure.db.models.user import User
 
 
-class GameEnds(Base):
-    __tablename__ = 'gamesends'
+class Game(Document):
+    player_1: Link[User]
+    player_2: Link[User]
 
-    id: Mapped[int] = mapped_column(
-        'id', autoincrement=True, nullable=False, unique=True, primary_key=True
-    )
-    game_id: Mapped[int] = mapped_column(
-        'game_id', ForeignKey('games.id'), nullable=False
-    )
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "player_1": "ab",
+                "player_2": "dc"
+            }
+        }
 
-    winner: Mapped[int] = mapped_column(
-        'winner', ForeignKey('users.id'), nullable=False
-    )
-    looser: Mapped[int] = mapped_column(
-        'looser', ForeignKey('users.id'), nullable=False
-    )
+
+class GameEnds(Game):
+    winner: str
+    dt_ended: datetime = Field(default_factory=datetime.now)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "player_1": "ab",
+                "player_2": "dc",
+                "winner": "player_1"
+            }
+        }
+
+    class Settings:
+        timeseries = TimeSeriesConfig(time_field='ts')

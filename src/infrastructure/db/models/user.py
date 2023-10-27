@@ -1,15 +1,17 @@
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
-
-from .base import Base
+from beanie import Document
 
 
-class User(Base):
-    __tablename__ = 'users'
+class User(Document):
+    username: str
+    password_hash: str
 
-    id: Mapped[int] = mapped_column(
-        "id", autoincrement=True, nullable=False, unique=True, primary_key=True
-    )
-    username: Mapped[str] = mapped_column(
-        "username", String(length=25), nullable=False, unique=True
-    )
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "UserName",
+                "password_hash": "b7119a51aadb98012c5ab59a88120f64e8bc8bfc97ee"
+            }
+        }
+    
+    class Settings:
+        name = "user"
