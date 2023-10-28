@@ -1,6 +1,4 @@
-from typing import Generator
 from beanie import init_beanie
-from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.core.config import settings

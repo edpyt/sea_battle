@@ -1,17 +1,8 @@
+from typing import Optional
 from beanie import Document
+from fastapi_users.db import BeanieBaseUser
 
 
-class User(Document):
+class User(BeanieBaseUser, Document):
     username: str
-    password: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "username": "UserName",
-                "password": "b7119a51aadb98012c5ab59a88120f64e8bc8bfc97ee"
-            }
-        }
-    
-    class Settings:
-        name = "user"
+    email: Optional[str]

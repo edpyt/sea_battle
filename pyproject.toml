@@ -12,6 +12,7 @@ uvicorn = "^0.23.2"
 motor = "^3.3.1"
 pydantic-settings = "^2.0.3"
 beanie = "^1.23.1"
+fastapi-users = {extras = ["beanie"], version = "^12.1.2"}
 
 
 [build-system]
