@@ -1,12 +1,19 @@
+from typing import Generator
 from beanie import init_beanie
+from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.core.config import settings
-from src.infrastructure.db.models import Game, GameEnds, User
+from src.infrastructure.db.models import Game, User
+
+
+def make_client() -> AsyncIOMotorClient:
+    client = AsyncIOMotorClient(settings.MONGODB_URL)
+    return client
 
 
 async def initiate_database() -> None:
-    client = AsyncIOMotorClient(settings.MONGODB_URL)
+    client: AsyncIOMotorClient = make_client()
     await init_beanie(
-        database=client.seabattledb, document_models=[Game, GameEnds, User]
+        database=client.seabattledb, document_models=[Game, User]
     )
