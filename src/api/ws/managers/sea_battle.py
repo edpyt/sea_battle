@@ -1,38 +1,38 @@
 import asyncio
 
 from fastapi import WebSocket
+from src.ws.managers.redis import RedisPubSubManager
 
 from src.core.services.board import GameBoard, ShipCountsOver
-from src.ws.managers.redis import RedisPubSubManager
 
 
 class SeaBattleManager:
     """WebSocket manager for game 'Sea Battle'"""
-    
+
     def __init__(self) -> None:
         """
         Initializes the WebSocketManager.
 
         Attributes:
             rooms (dict): A dictionary to store WebSocket connections in
-            different rooms 
+            different rooms
             self.pub
         """
         self.rooms: dict = {}
         self.pubsub_client = RedisPubSubManager()
-    
+
     async def add_user_to_room(
         self, room_id: str, username: str, websocket: WebSocket
     ) -> None:
         """
         Adds a user's WebSocket connection to a room.
-        
+
         Args:
             room_id (str): Room ID or channel name.
             websocket (WebSocket): WebSocket connection object.
         """
         await websocket.accept()
-        
+
         if room_id not in self.rooms:
             await self.pubsub_client.connect()
             pubsub_subscriber = await self.pubsub_client.subscribe(room_id)
@@ -49,6 +49,24 @@ class SeaBattleManager:
         if not self.rooms[room_id][username].get('game_board'):
             self.rooms[room_id][username]['game_board'] = GameBoard()
 
+    async def _pubsub_data_reader(self, pubsub_subscriber):
+        """
+        Reads and broadcasts messages received from Redis PubSub.
+
+        Args:
+            pubsub_subscriber (aioredis.ChannelSubscribe):
+                PubSub object for the subscribed channel.
+        """
+        while True:
+            message = await pubsub_subscriber.get_message(
+                ignore_subscribe_messages=True
+            )
+            if message is not None:
+                room_id = message['channel'].decode('utf-8')
+                all_sockets = self.rooms[room_id]
+                for socket in all_sockets:
+                    data = message['data'].decode('utf-8')
+                    await socket.send_text(data)
 
     async def broadcast_to_room(self, room_id: str, message: str) -> None:
         """
@@ -59,7 +77,7 @@ class SeaBattleManager:
             message (str): Message to be broadcasted.
         """
         await self.pubsub_client._publish(room_id, message)
-    
+
     async def remove_user_from_room(
         self, room_id: str, websocket: WebSocket
     ) -> None:
@@ -88,7 +106,7 @@ class SeaBattleManager:
         """
         connection: WebSocket = self.rooms[room_id][username]['connection']
         game_board: GameBoard = self.rooms[room_id][username]['game_board']
-        
+
         try:
             await game_board.set_cell_into_game_board(ship_type)
         except ShipCountsOver:

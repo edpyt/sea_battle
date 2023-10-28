@@ -30,7 +30,7 @@ class GetGames(GameUseCase):
 
 
 class UpdateGame(GameUseCase):
-    async def __call__(self, id_:PydanticObjectId, **kwargs) -> None:
+    async def __call__(self, id_: PydanticObjectId, **kwargs) -> None:
         await self.uow.lobby_holder.game_repo.update_game(id_, **kwargs)
 
 
