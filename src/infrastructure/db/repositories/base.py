@@ -8,10 +8,11 @@ Model = TypeVar("Model", bound=Document)
 
 class BaseRepository(Generic[Model]):
     """Base repository MongoDB"""
+
     def __init__(self, model: type[Model], session: AsyncIOMotorClient) -> None:
         self._model = model
         self._session = session
-    
+
     async def get_by_id(self, id_: PydanticObjectId) -> Model:
         res_obj = await self._model.get(id_)
         assert res_obj
@@ -28,7 +29,7 @@ class BaseRepository(Generic[Model]):
         obj = await self._model.get(id_)
         assert obj
         await obj.update(update_query)
-    
+
     async def delete_obj(self, id_: PydanticObjectId) -> None:
         obj = await self._model.get(id_)
         assert obj
