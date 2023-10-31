@@ -6,7 +6,7 @@ from fastapi_users import BaseUserManager, FastAPIUsers
 from fastapi_users.authentication import (
     AuthenticationBackend,
     BearerTransport,
-    JWTStrategy
+    JWTStrategy,
 )
 from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
 
@@ -33,8 +33,10 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
     async def on_after_request_verify(
         self, user: User, token: str, request: Optional[Request] = None
     ) -> None:
-        print(f"Verification requested for user {user.id}." +
-              f"Verification token: {token}")
+        print(
+            f"Verification requested for user {user.id}."
+            f"Verification token: {token}"
+        )
 
 
 async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):

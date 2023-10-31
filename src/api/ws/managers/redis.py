@@ -3,22 +3,23 @@ I've taked it from here:
 https://medium.com/@nandagopal05/scaling-websockets-with-pub-sub-using-python-redis-fastapi-b16392ffe291
 """
 import redis.asyncio as aioredis
+from redis.asyncio.client import PubSub
 
 
 class RedisPubSubManager:
     """
     WebSocket sea battle redis pub/sub manager
-    
+
     Args:
         host (str): Redis server host.
         port (int): Redis server port.
     """
+
     def __init__(
         self, host: str = 'localhost', port: int = 6379
     ) -> None:
         self.redis_host = host
         self.redis_port = port
-        self.pubsub = None
 
     async def connect(self) -> None:
         """
@@ -39,14 +40,7 @@ class RedisPubSubManager:
             port=self.redis_port,
             auto_close_connection_pool=False
         )
-    
-    async def connect(self) -> None:
-        """
-        Connects to the Redis server and initializes the pubsub client
-        """
-        self.redis_connection = await self._get_redis_connection()
-        self.pubsub = self.redis_connection.pubsub()
-    
+
     async def _publish(self, room_id: str, message: str) -> None:
         """
         Publishes a message to a specific Redis channel
@@ -56,20 +50,20 @@ class RedisPubSubManager:
             message (str): Message to be published.
         """
         await self.redis_connection.publish(room_id, message)
-    
-    async def subscribe(self, room_id: str) -> aioredis.Redis:
+
+    async def subscribe(self, room_id: str) -> PubSub:
         """
         Subscribe to a Redis channel.
 
         Args:
             room_id (str): Channel or room ID to subscribe to/
-        
+
         Returns:
             aioredis.ChannelSubscribe: PubSub object for the subscribed channel.
         """
         await self.pubsub.subscribe(room_id)
         return self.pubsub
-    
+
     async def unsubscribe(self, room_id: str) -> None:
         """
         Unsubscribes from a Redis channel.

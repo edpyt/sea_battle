@@ -1,3 +1,5 @@
+from typing import Any
+
 from beanie import PydanticObjectId
 
 from src.domain.lobby.dto.game import GameDTO
@@ -29,8 +31,14 @@ class GetGames(GameUseCase):
         return games
 
 
+class GetFreeGames(GameUseCase):
+    async def __call__(self, *args: Any, **kwds: Any) -> Any:
+        games = await self.uow.lobby_holder.game_repo.get_free_games()
+        return games
+
+
 class UpdateGame(GameUseCase):
-    async def __call__(self, id_:PydanticObjectId, **kwargs) -> None:
+    async def __call__(self, id_: PydanticObjectId, **kwargs) -> None:
         await self.uow.lobby_holder.game_repo.update_game(id_, **kwargs)
 
 
@@ -51,6 +59,9 @@ class GameServices:
 
     async def get_all_games(self) -> list[Game]:
         return await GetGames(self.uow)()
+
+    async def get_free_games(self) -> list[Game]:
+        return await GetFreeGames(self.uow)()
 
     async def get_game_by_id(self, id_: PydanticObjectId) -> Game:
         return await GetGameById(self.uow)(id_)
