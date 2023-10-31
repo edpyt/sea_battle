@@ -1,7 +1,7 @@
 from beanie import PydanticObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from src.infrastructure.db.models.game import Game
+from src.infrastructure.db.models.game import Game, GameStatusesEnum
 from src.infrastructure.db.repositories.base import BaseRepository
 
 
@@ -19,6 +19,9 @@ class GameRepository(BaseRepository[Game]):
 
     async def get_all_games(self) -> list[Game]:
         return await super().get_all()
+
+    async def get_free_games(self) -> list[Game]:
+        return await super().get_filtered(Game.status == GameStatusesEnum.FREE)
 
     async def update_game(self, id_: PydanticObjectId, **kwargs) -> None:
         await super().update_obj(id_, **kwargs)
