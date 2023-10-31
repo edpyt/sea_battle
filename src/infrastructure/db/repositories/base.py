@@ -22,6 +22,10 @@ class BaseRepository(Generic[Model]):
         result = await self._model.all().to_list()
         return result
 
+    async def get_filtered(self, *args) -> list[Model]:
+        result = await self._model.find(*args).to_list()
+        return result
+
     async def update_obj(self, id_: PydanticObjectId, **kwargs) -> None:
         update_query = {
             "$set": {field: value for field, value in kwargs.items()}

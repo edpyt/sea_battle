@@ -30,3 +30,14 @@ class GameBoard:
     async def set_cell_into_game_board(self, ship_type: str) -> None:
         ship: Optional[Ship] = self.ship_types.get(ship_type)
         await ship.pick()
+
+
+async def place_ship_to_board(game_board: GameBoard, ship_type: str) -> str:
+    message: str = 'Ok!'
+    try:
+        await game_board.set_cell_into_game_board(ship_type)
+    except ShipCountsOver:
+        message = 'Ships over!'
+    except TypeError:
+        message = f'Not found ship with type: {ship_type}'
+    return message
