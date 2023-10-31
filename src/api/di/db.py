@@ -1,6 +1,6 @@
 from typing import Generator
-from fastapi import Depends
 
+from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from src.infrastructure.db.main import make_client
