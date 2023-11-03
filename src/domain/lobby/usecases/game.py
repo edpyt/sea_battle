@@ -21,7 +21,13 @@ class GetGameById(GameUseCase):
 
 class CreateGame(GameUseCase):
     async def __call__(self, new_game: GameDTO) -> Game:
-        game = await self.uow.lobby_holder.game_repo.create_game(new_game)
+        create_game = Game(
+            dt_started=new_game.dt_started,
+            status=new_game.status,
+            player_1=new_game.player_1,
+            player_2=new_game.player_2,
+        )
+        game = await self.uow.lobby_holder.game_repo.create_game(create_game)
         return game
 
 

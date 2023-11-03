@@ -5,7 +5,9 @@ from fastapi.responses import JSONResponse
 from src.api.di.services import get_game_services
 from src.domain.lobby.dto import GameDTO
 from src.domain.lobby.usecases import GameServices
+from src.domain.user.interfaces import current_active_user
 from src.infrastructure.db.models.game import Game, GameStatusesEnum
+from src.infrastructure.db.models.user import User
 
 router = APIRouter()
 
@@ -31,11 +33,11 @@ async def change_status(
 # FIXME: fix route
 @router.post('/create/', response_description='Create game lobby')
 async def create_game(
-    # player_1_id: PydanticObjectId,
-    # player_2_id: PydanticObjectId,
     new_game: GameDTO,
-    game_services: GameServices = Depends(get_game_services)
+    game_services: GameServices = Depends(get_game_services),
+    user: User = Depends(current_active_user)
 ):
-    # await get_users_by_ids(player_1_id, player_2_id)
+    new_game.player_1 = await User.get_by_id(new_game.player_1)
+    new_game.player_2 = await User.get_by_id(new_game.player_2)
     await game_services.create_game(new_game)
     return JSONResponse({'is_created': True}, status_code=200)
