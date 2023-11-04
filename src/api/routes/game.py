@@ -3,8 +3,11 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from src.api.di.services import get_game_services
-from src.domain.lobby.usecases import GameServices
+from src.core.services.user import current_active_user
+from src.domain.game.dto import GameDTO
+from src.domain.game.usecases.game import GameServices
 from src.infrastructure.db.models.game import Game, GameStatusesEnum
+from src.infrastructure.db.models.user import User
 
 router = APIRouter()
 
@@ -12,10 +15,10 @@ router = APIRouter()
 @router.get(
     '/', response_description='Get all games lobbies'
 )
-async def get_active_games(
+async def get_free_games(
     game_services: GameServices = Depends(get_game_services)
 ) -> list[Game]:
-    return await game_services.get_all_games()
+    return await game_services.get_free_games()
 
 
 @router.get('/change-status/')
@@ -27,13 +30,23 @@ async def change_status(
     return await game_services.get_game_by_id(id_)
 
 
-# FIXME: fix route
 @router.post('/create/', response_description='Create game lobby')
 async def create_game(
-    # player_1_id: PydanticObjectId,
-    # player_2_id: PydanticObjectId,
-    new_game: Game,
+    new_game: GameDTO,
+    user: User = Depends(current_active_user),
     game_services: GameServices = Depends(get_game_services)
-):
+) -> JSONResponse:
+    """
+    Route for creating game lobby. Only authorize route.
+
+    Args:
+        new_game(GameDTO): Data Transfer Object for model Game
+
+    Kwargs:
+        game_serivces(GameServices): Services usecases for model Game,
+        user(User): Current user which is creating game,
+        user_services(UserServices): Services usecases for model User
+    """
+    new_game.player_1 = user
     await game_services.create_game(new_game)
     return JSONResponse({'is_created': True}, status_code=200)

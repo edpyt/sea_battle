@@ -2,9 +2,9 @@ from typing import Any
 
 from beanie import PydanticObjectId
 
-from src.domain.lobby.dto.game import GameDTO
-from src.domain.lobby.exceptions import GameNotExists
-from src.domain.lobby.interfaces import GameUseCase
+from src.domain.game.dto.game import GameDTO
+from src.domain.game.exceptions import GameNotExists
+from src.domain.game.interfaces import GameUseCase
 from src.infrastructure.db.models import Game
 from src.infrastructure.db.uow import UnitOfWork
 
@@ -21,7 +21,12 @@ class GetGameById(GameUseCase):
 
 class CreateGame(GameUseCase):
     async def __call__(self, new_game: GameDTO) -> Game:
-        game = await self.uow.lobby_holder.game_repo.create_game(new_game)
+        create_game = Game(
+            dt_started=new_game.dt_started,
+            status=new_game.status,
+            player_1=new_game.player_1,
+        )
+        game = await self.uow.lobby_holder.game_repo.create_game(create_game)
         return game
 
 

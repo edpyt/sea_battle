@@ -3,20 +3,20 @@ version: '3'
 services:
   fastapi:
     build:
-      context: .
+      context: ./src
       dockerfile: ./compose/Dockerfile
     command: uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
     volumes:
-      - ./src:/app/src
+      - ./:src/
     env_file:
-      - ./compose/dev/.env.dev
+      - ./compose/dev/.env
     environment:
       - DOCKER=True
 
   db:
     image: mongo:latest
     env_file:
-      - ./compose/dev/.env.dev
+      - ./compose/dev/.env
     volumes:
       - mongo_data:/data/db
     ports:
