@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 
+from src.api.di.user import get_auth_backend
 from src.api.routes import game_router, user_router
-from src.domain.user.interfaces import auth_backend, fastapi_users
+from src.api.ws.routes.sea_battle_ws import router as ws_router
+from src.core.services.user import fastapi_users
 from src.domain.user.schemas import UserCreate, UserRead, UserUpdate
 from src.infrastructure.db.main import initiate_database
 
@@ -13,12 +15,13 @@ async def start_database() -> None:
     await initiate_database()
 
 
+app.include_router(ws_router, prefix='/ws')
 app.include_router(game_router, prefix='/games')
 app.include_router(user_router)
 
 # FastAPI Users
 app.include_router(
-    fastapi_users.get_auth_router(auth_backend),
+    fastapi_users.get_auth_router(get_auth_backend()),
     prefix="/auth/jwt",
     tags=["auth"]
 )
