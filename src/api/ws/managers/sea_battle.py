@@ -2,8 +2,8 @@ import asyncio
 
 from beanie import PydanticObjectId
 from fastapi import WebSocket
-from src.ws.managers.redis import RedisPubSubManager
 
+from src.api.ws.managers.redis import RedisPubSubManager
 from src.core.services.board import GameBoard
 
 
@@ -33,7 +33,6 @@ class SeaBattleManager:
             username (str): Username,
             websocket (WebSocket): WebSocket connection object.
         """
-        await websocket.accept()
         await self._set_default_connection(room_id, username, websocket)
 
         if room_id not in self.rooms:

@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from src.api.di.services import get_game_services
+from src.core.services.user import current_active_user
 from src.domain.game.dto import GameDTO
 from src.domain.game.usecases.game import GameServices
-from src.domain.user.interfaces import current_active_user
 from src.infrastructure.db.models.game import Game, GameStatusesEnum
 from src.infrastructure.db.models.user import User
 
