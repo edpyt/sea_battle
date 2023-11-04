@@ -1,6 +1,6 @@
 from typing import Optional
 
-from utils.ship import SHIPS
+from src.core.utils.ship import SHIPS
 
 
 class ShipCountsOver(Exception):

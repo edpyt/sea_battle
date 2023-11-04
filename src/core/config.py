@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    SECRET: str = "SECRET"
     MONGODB_URL: str = os.getenv('MONGODB_URL')
 
     class Config:
