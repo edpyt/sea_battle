@@ -1,16 +1,10 @@
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 
 from beanie import Document, Link
 
+from src.domain.game.enums.statuses import GameStatusesEnum
 from src.infrastructure.db.models.user import User
-
-
-class GameStatusesEnum(str, Enum):
-    FREE: str = 'free'
-    IN_GAME: str = 'in_game'
-    ENDED: str = 'ended'
 
 
 class Game(Document):
