@@ -3,8 +3,8 @@ from fastapi import WebSocket
 
 from src.api.ws.managers.sea_battle import sea_battle_ws_manager
 from src.core.services.board import GameBoard, place_ship_to_board
-from src.domain.lobby.exceptions.game import GameNotExists
-from src.domain.lobby.usecases.game import GameServices
+from src.domain.game.exceptions.game import GameNotExists
+from src.domain.game.usecases.game import GameServices
 
 
 async def sea_battle_ws(
