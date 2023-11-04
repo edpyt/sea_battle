@@ -1,8 +1,9 @@
 from fastapi import Depends
 
 from src.api.di.db import uow_provider
+from src.api.di.user import get_user_manager
 from src.domain.game.usecases.game import GameServices
-from src.domain.user.interfaces.user import UserManager, get_user_manager
+from src.domain.user.interfaces.manager import UserManager
 from src.domain.user.usecases.user import UserServices
 from src.infrastructure.db.uow import UnitOfWork
 
