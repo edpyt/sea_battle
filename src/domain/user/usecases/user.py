@@ -2,7 +2,8 @@ from typing import Optional
 
 from beanie import PydanticObjectId
 
-from src.domain.user.interfaces.user import UserManager, UserUseCase
+from src.domain.user.interfaces.manager import UserManager
+from src.domain.user.interfaces.user import UserUseCase
 from src.domain.user.schemas import UserCreate
 from src.infrastructure.db.models.user import User
 from src.infrastructure.db.uow import UnitOfWork
