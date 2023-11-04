@@ -15,7 +15,13 @@ from fastapi_users.models import UP
 from fastapi_users.schemas import UC
 
 from src.api.di.user import get_user_db
+from src.domain.common.usecases.base import BaseUseCase
 from src.infrastructure.db.models import User
+
+
+class UserUseCase(BaseUseCase):
+    ...
+
 
 SECRET = "SECRET"
 

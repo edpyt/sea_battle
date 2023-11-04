@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, WebSocket
 
 from src.api.di.services import get_game_services
 from src.core.services.ws import sea_battle_ws
-from src.domain.lobby.usecases.game import GameServices
+from src.domain.game.usecases.game import GameServices
 
 router = APIRouter(prefix='/ws')
 
