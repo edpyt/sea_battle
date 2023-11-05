@@ -3,6 +3,7 @@ from typing import Any
 from beanie import PydanticObjectId
 
 from src.domain.game.dto.game import GameDTO
+from src.domain.game.enums.statuses import GameStatusesEnum
 from src.domain.game.exceptions import GameNotExists
 from src.domain.game.interfaces import GameUseCase
 from src.infrastructure.db.models import Game
@@ -73,7 +74,10 @@ class GameServices:
 
     async def update_game(self, id_: PydanticObjectId, **kwargs) -> Game:
         await UpdateGame(self.uow)(id_, **kwargs)
-        return await GetGameById(self.uow)(id_)
+        game = await GetGameById(self.uow)(id_)
+        if game.player_2 is not None and game.status == GameStatusesEnum.FREE:
+            await UpdateGame(self.uow)(id_, status=GameStatusesEnum.IN_GAME)
+        return game
 
     async def delete_game(self, id_: PydanticObjectId) -> None:
         await DeleteGame(self.uow)(id_)

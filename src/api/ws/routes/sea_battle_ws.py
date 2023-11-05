@@ -20,8 +20,7 @@ async def main_ws_connection(
 
     Args:
         websocket(WebSocket): WebSocket connection object,
-        room_id(PydanticObjectId): Room MongoDB id,
-        username(str): Username unique field value,
+        user(User): Current active user model
 
     Kwargs:
         game_services(GameServices): Services usecases for model Game
