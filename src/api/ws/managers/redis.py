@@ -37,7 +37,7 @@ class RedisPubSubManager:
         """
         return aioredis.Redis(
             host=self.redis_host,
-            port=self.redis_port,
+            port=int(self.redis_port),
             auto_close_connection_pool=False
         )
 

@@ -8,7 +8,6 @@ Model = TypeVar("Model", bound=Document)
 
 class BaseRepository(Generic[Model]):
     """Base repository MongoDB"""
-
     def __init__(self, model: type[Model], session: AsyncIOMotorClient) -> None:
         self._model = model
         self._session = session
@@ -24,6 +23,10 @@ class BaseRepository(Generic[Model]):
 
     async def get_filtered(self, *args) -> list[Model]:
         result = await self._model.find(*args).to_list()
+        return result
+
+    async def get_filtered_one(self, *args) -> Model:
+        result = await self._model.find_one(*args)
         return result
 
     async def update_obj(self, id_: PydanticObjectId, **kwargs) -> None:
