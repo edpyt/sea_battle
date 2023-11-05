@@ -46,7 +46,7 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
         :param credentials: The user credentials.
         """
         try:
-            user = await User.get_by_username(credentials.username)
+            user = await self.get_by_username(credentials.username)
         except UserNotExists:
             # Run the hasher to mitigate timing attack
             # Inspired from Django: https://code.djangoproject.com/ticket/20760
@@ -66,6 +66,12 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
                 user, {"hashed_password": updated_password_hash}
             )
 
+        return user
+
+    async def get_by_username(self, username: str) -> User:
+        user = await User.get_by_username(username)
+        if user is None:
+            raise UserNotExists()
         return user
 
     async def create(

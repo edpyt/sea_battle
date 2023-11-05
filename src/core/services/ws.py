@@ -1,4 +1,5 @@
 from beanie import PydanticObjectId
+from bson.errors import InvalidId
 from fastapi import WebSocket
 
 from src.api.ws.managers.sea_battle import sea_battle_ws_manager
@@ -32,20 +33,31 @@ async def sea_battle_ws(
 
     Args:
         websocket(WebSocket): WebSocket connection object,
-        user(User): User model instance,
-        room_id(PydanticObjectId): Room id from `Game` model.
+        user(User): User model instance
     """
     await websocket.accept()
+    await sea_battle_connect(websocket, user, game_services)
 
-    free_rooms: list[PydanticObjectId] = await get_free_rooms(game_services)
-    free_rooms_str = ', '.join(map(str, free_rooms))
-    await websocket.send_text(f'Select a room from the list: {free_rooms_str}')
 
-    room_id = await websocket.receive_text()
-    await add_websocket_to_room(
-        room_id, user.username, websocket, game_services
-    )
-    await websocket.send_text("You're succesfully connected to websocket!")
+async def sea_battle_connect(
+    websocket: WebSocket, user: User, game_services: GameServices
+) -> None:
+    while True:
+        free_rooms = ', '.join(map(str, await get_free_rooms(game_services)))
+        await websocket.send_text(f'Select room id from the list: {free_rooms}')
+
+        try:
+            room_id = PydanticObjectId(await websocket.receive_text())
+        except InvalidId:
+            continue
+
+        is_connected: bool = await add_websocket_to_room(
+            str(room_id), user.username, websocket, game_services
+        )
+        if is_connected:
+            await websocket.send_text("You're succesfully connected.")
+            break
+    await game_services.update_game(room_id, player_2=user)
 
 
 async def get_free_rooms(game_services: GameServices) -> list[PydanticObjectId]:
@@ -58,7 +70,7 @@ async def add_websocket_to_room(
     username: str,
     websocket: WebSocket,
     game_services: GameServices
-) -> None:
+) -> bool:
     """
     Support function for main websocket connection function
 
@@ -68,12 +80,13 @@ async def add_websocket_to_room(
         websocket(WebSocket): WebSocket connection object,
         game_serivces(GameServices): Services usecases for model Game
     """
+    is_connected: bool = False
     try:
         await game_services.get_game_by_id(room_id)
     except GameNotExists:
         await websocket.send_text(f"Not found game with id: {room_id}")
-        await websocket.close()
     else:
-        await sea_battle_ws_manager.add_user_to_room(
+        is_connected = await sea_battle_ws_manager.add_user_to_room(
             room_id, username, websocket
         )
+    return is_connected

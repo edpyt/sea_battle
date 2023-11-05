@@ -27,7 +27,7 @@ async def get_user_manager(
 
 
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=settings.SECRET, lifetime_seconds=3600)
+    return JWTStrategy(secret=settings.SECRET, lifetime_seconds=None)
 
 
 def get_auth_backend() -> AuthenticationBackend:
@@ -43,10 +43,9 @@ async def get_user_from_token(
     auth_backend: AuthenticationBackend = Depends(get_auth_backend),
     user_manager: UserManager = Depends(get_user_manager)
 ) -> AsyncGenerator[User, None]:
-    token = websocket.headers.get("fastapiusersauth")
+    token = websocket.headers.get("Authorization")
     user = await auth_backend.get_strategy().read_token(token, user_manager)
-    print(token)
     if not user or not user.is_active:
-        logger.error('User is not provided or is not active')
-        raise WebSocketException("Invalid user")
+        logger.error('User is not provided or not active')
+        raise WebSocketException(code=1008, reason="Invalid user")
     yield user
