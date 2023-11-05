@@ -1,6 +1,3 @@
-import asyncio
-
-from beanie import PydanticObjectId
 from fastapi import WebSocket
 
 from src.api.ws.managers.redis import RedisPubSubManager
@@ -20,27 +17,38 @@ class SeaBattleManager:
             self.pubsub_client: custom redis pub sub manager
         """
         self.rooms: dict = {}
-        self.pubsub_client = RedisPubSubManager()
+        self.pubsub_client = RedisPubSubManager(host="localhost", port=6379)
 
     async def add_user_to_room(
-        self, room_id: PydanticObjectId, username: str, websocket: WebSocket
-    ) -> None:
+        self, room_id: str, username: str, websocket: WebSocket
+    ) -> bool:
         """
         Adds a user's WebSocket connection to a room.
 
         Args:
-            room_id (PydanticObjectId): Room id for channel,
+            room_id (str): Room id for channel,
             username (str): Username,
             websocket (WebSocket): WebSocket connection object.
         """
         await self._set_default_connection(room_id, username, websocket)
 
-        if room_id not in self.rooms:
+        if is_connected := (await self.is_user_in_room(room_id, username)):
             await self.pubsub_client.connect()
-            pubsub_subscriber = await self.pubsub_client.subscribe(room_id)
-            await asyncio.create_task(
-                self._pubsub_data_reader(pubsub_subscriber)
-            )
+            await self.pubsub_client.subscribe(room_id)
+
+        return is_connected
+
+    async def is_user_in_room(
+        self, room_id: str, username: str
+    ) -> bool:
+        """
+        Check if user exists in room
+
+        Args:
+            room_id (str): Room id for channel,
+            username (str): Username
+        """
+        return bool(self.rooms[room_id].get(username))
 
     async def _pubsub_data_reader(self, pubsub_subscriber):
         """
@@ -62,7 +70,7 @@ class SeaBattleManager:
                     await socket.send_text(data)
 
     async def broadcast_to_room(
-        self, room_id: PydanticObjectId, message: str
+        self, room_id: str, message: str
     ) -> None:
         """
         Broadcasts a message to all connected WebSockets in a room.
@@ -73,7 +81,7 @@ class SeaBattleManager:
         """
         await self.pubsub_client._publish(room_id, message)
 
-    async def remove_room(self, room_id: PydanticObjectId) -> None:
+    async def remove_room(self, room_id: str) -> None:
         """
         Removes a user's WebSocket connection from a room.
 
@@ -85,20 +93,25 @@ class SeaBattleManager:
             await self.pubsub_client.unsubscribe(room_id)
 
     async def _set_default_connection(
-        self, room_id: PydanticObjectId, username: str, websocket: WebSocket
+        self, room_id: str, username: str, websocket: WebSocket
     ) -> None:
         """
         Setup default fields for self.rooms
 
         Args:
-            room_id (PydanticObjectId): Room id for channel,
+            room_id (str): Room id for channel,
             username (str): Username,
             websocket (WebSocket): WebSocket connection object.
         """
         self.rooms.setdefault(room_id, {})
         self.rooms[room_id].setdefault(username, {})
-        self.rooms[room_id][username].setdefault('connection', websocket)
-        self.rooms[room_id][username].setdefault('game_board', GameBoard())
+
+        if len(self.rooms[room_id]) > 2:
+            del self.rooms[room_id][username]
+            await websocket.send_text('This room is full!')
+        else:
+            self.rooms[room_id][username].setdefault('connection', websocket)
+            self.rooms[room_id][username].setdefault('game_board', GameBoard())
 
 
 sea_battle_ws_manager = SeaBattleManager()
