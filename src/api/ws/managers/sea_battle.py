@@ -1,6 +1,9 @@
+from typing import Optional
+
 from fastapi import WebSocket
 
 from src.api.ws.managers.redis import RedisPubSubManager
+from src.core.config import settings
 from src.core.services.board import GameBoard
 
 
@@ -17,7 +20,9 @@ class SeaBattleManager:
             self.pubsub_client: custom redis pub sub manager
         """
         self.rooms: dict = {}
-        self.pubsub_client = RedisPubSubManager(host="localhost", port=6379)
+        self.pubsub_client = RedisPubSubManager(
+            host=settings.REDIS_HOST, port=int(settings.REDIS_PORT)
+        )
 
     async def add_user_to_room(
         self, room_id: str, username: str, websocket: WebSocket
@@ -49,6 +54,16 @@ class SeaBattleManager:
             username (str): Username
         """
         return bool(self.rooms[room_id].get(username))
+
+    async def get_game_board(
+        self, room_id: str, username: str
+    ) -> Optional[GameBoard]:
+        game_board: Optional[GameBoard] = None
+        try:
+            game_board = self.rooms[room_id][username]['game_board']
+        except KeyError:
+            ...
+        return game_board
 
     async def _pubsub_data_reader(self, pubsub_subscriber):
         """

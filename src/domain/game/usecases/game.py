@@ -6,7 +6,7 @@ from src.domain.game.dto.game import GameDTO
 from src.domain.game.enums.statuses import GameStatusesEnum
 from src.domain.game.exceptions import GameNotExists
 from src.domain.game.interfaces import GameUseCase
-from src.infrastructure.db.models import Game
+from src.infrastructure.db.models import Game, User
 from src.infrastructure.db.uow import UnitOfWork
 
 
@@ -18,6 +18,14 @@ class GetGameById(GameUseCase):
             raise GameNotExists
         else:
             return game
+
+
+class GetUserActiveGame(GameUseCase):
+    async def __call__(self, user: User) -> Game:
+        game = await (
+            self.uow.lobby_holder.game_repo.get_active_game_by_user(user)
+        )
+        return game
 
 
 class CreateGame(GameUseCase):
@@ -65,6 +73,9 @@ class GameServices:
 
     async def get_all_games(self) -> list[Game]:
         return await GetGames(self.uow)()
+
+    async def get_user_active_game(self, user: User) -> Game:
+        return await GetUserActiveGame(self.uow)(user)
 
     async def get_free_games(self) -> list[Game]:
         return await GetFreeGames(self.uow)()

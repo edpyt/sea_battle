@@ -1,3 +1,7 @@
+import pickle
+from typing import Optional
+
+import redis.asyncio as aioredis
 from beanie import PydanticObjectId
 from bson.errors import InvalidId
 from fastapi import WebSocket
@@ -26,7 +30,10 @@ async def connection_place_ship(
 
 
 async def sea_battle_ws(
-    websocket: WebSocket, user: User, game_services: GameServices
+    websocket: WebSocket,
+    user: User,
+    game_services: GameServices,
+    redis_session: aioredis.Redis
 ) -> None:
     """
     Main logic with sea battle websockets
@@ -36,11 +43,22 @@ async def sea_battle_ws(
         user(User): User model instance
     """
     await websocket.accept()
-    await sea_battle_connect(websocket, user, game_services)
+
+    active_game = await game_services.get_user_active_game(user)
+
+    if active_game:
+        ...
+    else:
+        await sea_battle_create_connection(
+            websocket, user, game_services, redis_session
+        )
 
 
-async def sea_battle_connect(
-    websocket: WebSocket, user: User, game_services: GameServices
+async def sea_battle_create_connection(
+    websocket: WebSocket,
+    user: User,
+    game_services: GameServices,
+    redis_session: aioredis.Redis
 ) -> None:
     while True:
         free_rooms = ', '.join(map(str, await get_free_rooms(game_services)))
@@ -58,6 +76,15 @@ async def sea_battle_connect(
             await websocket.send_text("You're succesfully connected.")
             break
     await game_services.update_game(room_id, player_2=user)
+    user_game_board: Optional[GameBoard] = await (
+        sea_battle_ws_manager.get_game_board(
+            room_id=str(room_id),
+            username=user.username
+        )
+    )
+    await set_saved_game(
+        user_game_board, user.username, redis_session
+    )
 
 
 async def get_free_rooms(game_services: GameServices) -> list[PydanticObjectId]:
@@ -90,3 +117,18 @@ async def add_websocket_to_room(
             room_id, username, websocket
         )
     return is_connected
+
+
+async def get_saved_game(
+    username: str, redis_session: aioredis.Redis
+) -> Optional[GameBoard]:
+    return await redis_session.get(username)
+
+
+async def set_saved_game(
+    game_board: GameBoard,
+    username: str,
+    redis_session: aioredis.Redis
+) -> None:
+    serialized_game_board = pickle.dumps(game_board)
+    await redis_session.set(username, serialized_game_board)
