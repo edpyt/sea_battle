@@ -29,13 +29,14 @@ class BaseRepository(Generic[Model]):
         result = await self._model.find_one(*args)
         return result
 
-    async def update_obj(self, id_: PydanticObjectId, **kwargs) -> None:
+    async def update_obj(self, id_: PydanticObjectId, **kwargs) -> Model:
         update_query = {
             "$set": {field: value for field, value in kwargs.items()}
         }
         obj = await self._model.get(id_)
         assert obj
         await obj.update(update_query)
+        return obj
 
     async def delete_obj(self, id_: PydanticObjectId) -> None:
         obj = await self._model.get(id_)
