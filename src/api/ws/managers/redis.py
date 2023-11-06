@@ -20,12 +20,16 @@ class RedisPubSubManager:
     ) -> None:
         self.redis_host = host
         self.redis_port = port
+        self.redis_connection = aioredis.Redis(
+            host=self.redis_host,
+            port=int(self.redis_port),
+            auto_close_connection_pool=False
+        )
 
     async def connect(self) -> None:
         """
         Connects to the Redis server and initializes the pubsub client
         """
-        self.redis_connection = await self._get_redis_connection()
         self.pubsub = self.redis_connection.pubsub()
 
     async def _get_redis_connection(self) -> aioredis.Redis:
@@ -37,7 +41,7 @@ class RedisPubSubManager:
         """
         return aioredis.Redis(
             host=self.redis_host,
-            port=self.redis_port,
+            port=int(self.redis_port),
             auto_close_connection_pool=False
         )
 
