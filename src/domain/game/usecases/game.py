@@ -25,7 +25,6 @@ class GetUserActiveGame(GameUseCase):
         game = await (
             self.uow.lobby_holder.game_repo.get_user_current_game(user_id)
         )
-        print(game)
         return game
 
 
