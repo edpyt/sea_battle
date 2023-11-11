@@ -40,5 +40,5 @@ class BaseRepository(Generic[Model]):
 
     async def delete_obj(self, id_: PydanticObjectId) -> None:
         obj = await self._model.get(id_)
-        assert obj
-        await obj.delete()
+        if obj:
+            await obj.delete()
