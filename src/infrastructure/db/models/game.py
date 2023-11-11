@@ -15,3 +15,11 @@ class Game(Document):
 
     class Settings:
         name = 'game'
+
+
+class GameEnds(Document):
+    game: Link[Game]
+    winner: Link[User]
+
+    class Settings:
+        name = 'game_ends'
