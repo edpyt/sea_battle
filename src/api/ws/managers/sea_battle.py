@@ -46,7 +46,7 @@ class SeaBattleManager:
         room_id: str,
         username: str,
         websocket: WebSocket,
-        game_board: GameBoard = GameBoard()
+        game_board: Optional[GameBoard] = None
     ) -> bool:
         """
         Adds a user's WebSocket connection to a room.
@@ -56,6 +56,8 @@ class SeaBattleManager:
             username (str): Username,
             websocket (WebSocket): WebSocket connection object.
         """
+        if not game_board:
+            game_board = GameBoard()
         await self._setdefault_connection(
             room_id, username, websocket, game_board
         )
@@ -82,11 +84,42 @@ class SeaBattleManager:
         self, room_id: str, username: str
     ) -> Optional[GameBoard]:
         game_board: Optional[GameBoard] = None
+        print(room_id, username)
         try:
             game_board = self.rooms[room_id][username]['game_board']
         except KeyError:
-            ...
+            print(self.rooms)
         return game_board
+
+    async def get_users_from_room(self, room_id: str) -> list[str]:
+        return list(self.rooms[room_id].keys())
+
+    async def get_other_user(
+        self, room_id: str, username: str
+    ) -> Optional[dict[str, GameBoard | WebSocket]]:
+        """
+        Get other user from rooms dictionary
+
+        Args:
+            room_id (str): Room id for channel,
+            username (str): Username
+        """
+        for username_other in self.rooms[room_id]:
+            if username != username_other:
+                return self.rooms[room_id][username_other]
+        return None
+
+    async def is_game_over(self, room_id: str) -> bool:
+        return any(
+            self.rooms[room_id][user]['game_board'].is_game_over
+            for user in self.rooms[room_id]
+        )
+
+    async def get_winner(self, room_id: str) -> str:
+        for username in self.rooms[room_id]:
+            if not self.rooms[room_id][username]['game_board'].is_game_over:
+                return username
+        raise ValueError()
 
     async def remove_room(self, room_id: str) -> None:
         """
@@ -96,8 +129,32 @@ class SeaBattleManager:
             room_id (str): Room id for channel.
         """
         if self.rooms.get(room_id):
+            for user_connection in self.rooms[room_id]:
+                connection: WebSocket = (
+                    self.rooms[room_id][user_connection]['connection']
+                )
+                await connection.close()
             del self.rooms[room_id]
             await self.pubsub_client.unsubscribe(room_id)
+
+    async def all_users_initialized(self, room_id: str) -> bool:
+        """
+        Is all users initialized game.
+
+        Args:
+            room_id (str): Room id for channel.
+        """
+        if len(self.rooms[room_id]) != 2:
+            return False
+        user_ships_and_game_initialized = all(
+            (
+                self.rooms
+                [room_id][user]['game_board']
+                .is_all_ships_placed_and_game_initialized
+                for user in self.rooms[room_id]
+            )
+        )
+        return len(self.rooms[room_id]) == 2 and user_ships_and_game_initialized
 
     async def _setdefault_connection(
         self,

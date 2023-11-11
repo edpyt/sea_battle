@@ -58,10 +58,7 @@ class UpdateGame(GameUseCase):
 
 class DeleteGame(GameUseCase):
     async def __call__(self, id_: PydanticObjectId) -> None:
-        try:
-            await self.uow.lobby_holder.game_repo.delete_game(id_)
-        except AssertionError:
-            raise GameNotExists
+        await self.uow.lobby_holder.game_repo.delete_game(id_)
 
 
 class GameServices:
