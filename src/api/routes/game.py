@@ -48,5 +48,7 @@ async def create_game(
         user_services(UserServices): Services usecases for model User
     """
     new_game.player_1 = user
-    await game_services.create_game(new_game)
-    return JSONResponse({'is_created': True}, status_code=200)
+    if not await game_services.get_user_active_game(user.id):
+        await game_services.create_game(new_game)
+        return JSONResponse({'is_created': True}, status_code=200)
+    return JSONResponse({'error': 'You already have actual game'})
