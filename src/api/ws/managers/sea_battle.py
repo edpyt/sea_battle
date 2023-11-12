@@ -84,11 +84,10 @@ class SeaBattleManager:
         self, room_id: str, username: str
     ) -> Optional[GameBoard]:
         game_board: Optional[GameBoard] = None
-        print(room_id, username)
         try:
             game_board = self.rooms[room_id][username]['game_board']
         except KeyError:
-            print(self.rooms)
+            ...
         return game_board
 
     async def get_users_from_room(self, room_id: str) -> list[str]:
@@ -103,6 +102,9 @@ class SeaBattleManager:
         Args:
             room_id (str): Room id for channel,
             username (str): Username
+        Returns:
+            user_connection(dict): Dictionary with gameboard, connection and
+                turn.
         """
         for username_other in self.rooms[room_id]:
             if username != username_other:
@@ -180,6 +182,11 @@ class SeaBattleManager:
         else:
             self.rooms[room_id][username].setdefault('connection', websocket)
             self.rooms[room_id][username].setdefault('game_board', game_board)
+
+            other_user = await self.get_other_user(room_id, username)
+            self.rooms[room_id][username].setdefault(
+                'is_turn', not other_user or not other_user['is_turn']
+            )
 
     async def get_saved_game(self, username: str) -> Optional[GameBoard]:
         """

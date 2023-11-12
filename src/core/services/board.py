@@ -216,7 +216,6 @@ class GameBoardGame(GameBoardPlayerMove):
             all(amount == 0 for amount in ships_amounts)
             and self.GAME_LETTERS == ''.join(self.game_board.keys())
         )
-        print(res)
         return res
 
     @property
@@ -242,7 +241,6 @@ class GameBoard(GameBoardGame):
     """The main class for the playing field of the game"""
     def __init__(self) -> None:
         self._init_game_board()
-        self.is_turn = False
 
 
 if __name__ == '__main__':
