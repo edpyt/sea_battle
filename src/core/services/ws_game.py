@@ -16,7 +16,6 @@ from src.infrastructure.db.models.user import User
 async def game(room_id: str, username: str) -> None:
     ws_game_user_1 = sea_battle_ws_manager.rooms[room_id][username]
     websocket_user_1: WebSocket = ws_game_user_1['connection']
-    game_board_user_1: GameBoard = ws_game_user_1['game_board']
 
     ws_game_user_2 = await sea_battle_ws_manager.get_other_user(
         room_id, username
@@ -27,7 +26,7 @@ async def game(room_id: str, username: str) -> None:
     while not await sea_battle_ws_manager.is_game_over(room_id):
         ws_text = await websocket_user_1.receive_text()
 
-        if game_board_user_1.is_turn:
+        if ws_game_user_1['is_turn']:
             while True:
                 ws_text = await websocket_user_1.receive_text()
                 cords = _validate_cords(ws_text)
@@ -38,8 +37,8 @@ async def game(room_id: str, username: str) -> None:
                 else:
                     is_hited = game_board_user_2.attack(*cords)
                     if not is_hited:
-                        game_board_user_1.is_turn = False
-                        game_board_user_2.is_turn = True
+                        ws_game_user_1['is_turn'] = False
+                        ws_game_user_2['is_turn'] = True
                         break
                     await websocket_user_1.send_text(
                         game_utils.WS_GAME_HIT_SHIP_USER_1_INFO
@@ -127,6 +126,7 @@ async def init_game_board(
             else:
                 await sea_battle_ws_manager.set_saved_game(game_board, username)
                 await websocket.send_text(game_utils.WS_USER_SHIP_PLACED_INFO)
+                game_board.print_board()
         except ShipsOver:
             await websocket.send_text(
                 game_utils

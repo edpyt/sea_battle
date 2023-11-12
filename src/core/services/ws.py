@@ -1,8 +1,5 @@
 """
 Main services for initialize WebSocket connection.
-
-Uses GameServices usecases.
-So only here you can create a connection logic to WebSocket.
 """
 from typing import Optional
 
@@ -37,14 +34,13 @@ async def sea_battle_ws(
         user(User): User model instance,
         game_services(GameServices): Services usecases for model Game.
     """
+    game_id: Optional[str] = None
     try:
-        await websocket.accept()
-
         active_game = await game_services.get_user_active_game(user_id=user.id)
         cached_active_game = await sea_battle_ws_manager.get_saved_game(
             user.username
         )
-        game_id: str = await sea_battle_connection(
+        game_id = await sea_battle_connection(
             websocket, user, game_services, active_game, cached_active_game
         )
 
@@ -56,11 +52,14 @@ async def sea_battle_ws(
 
         if await wait_all_users(websocket, game_id, game_services):
             await game(game_id, user.username)
-
-        await close_connection_update_game(game_id, game_services)
+            await close_connection_update_game(game_id, game_services)
     except WebSocketDisconnect:
-        # TODO: delete websocket from manager
-        ...
+        if (
+            game_id
+            and sea_battle_ws_manager.rooms.get(game_id)
+            and not await sea_battle_ws_manager.get_users_from_room(game_id)
+        ):
+            await close_connection_update_game(game_id, game_services, True)
 
 
 async def sea_battle_connection(
@@ -70,6 +69,7 @@ async def sea_battle_connection(
     active_game: Optional[Game],
     cached_active_game: Optional[GameBoard]
 ) -> str:
+    await websocket.accept()
     if active_game:
         game_id = await sea_battle_exist_connection(
             websocket, user, active_game, cached_active_game
