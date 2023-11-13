@@ -169,9 +169,7 @@ class GameBoardPlayerMove(GameBoardSetShip):
 
         if (x, y) in self.moves[cell]:
             raise HaveBeenMoveHere()
-
-        is_hited: bool = cell.value
-
+        is_hited: bool = type(cell) is Ship
         if is_hited:
             self.moves[cell].append((x, y))
             self.check_is_drowned(cell)
@@ -199,10 +197,10 @@ class GameBoardGame(GameBoardPlayerMove):
         }
         self.size = size
         self.ships: dict[int, dict[str, int]] = {
-            1: {'amount': 4, 'cells': 1},
-            2: {'amount': 3, 'cells': 2},
-            3: {'amount': 2, 'cells': 3},
-            4: {'amount': 1, 'cells': 4}
+            1: {'amount': 1, 'cells': 1},
+            2: {'amount': 0, 'cells': 2},
+            3: {'amount': 0, 'cells': 3},
+            4: {'amount': 0, 'cells': 4}
         }
         self._ships_placed: list[Ship] = []
         self.ship_counter: dict[str, int] = dict(

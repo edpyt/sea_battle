@@ -15,6 +15,7 @@ from src.core.services.ws_game import (
     init_game_board,
     wait_all_users,
 )
+from src.core.utils import game_utils
 from src.domain.game.exceptions.game import GameNotExists
 from src.domain.game.usecases.game import GameServices
 from src.infrastructure.db.models.game import Game
@@ -51,6 +52,12 @@ async def sea_battle_ws(
             await init_game_board(websocket, game_board, user.username)
 
         if await wait_all_users(websocket, game_id, game_services):
+            first_move: str = game_utils.WS_GAME_START_MESSAGE_SUCCES.format(
+                username=await (
+                    sea_battle_ws_manager.get_first_move_username(game_id)
+                )
+            )
+            await websocket.send_text(first_move)
             await game(game_id, user.username)
             await close_connection_update_game(game_id, game_services)
     except WebSocketDisconnect:
