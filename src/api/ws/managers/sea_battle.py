@@ -95,7 +95,7 @@ class SeaBattleManager:
 
     async def get_other_user(
         self, room_id: str, username: str
-    ) -> Optional[dict[str, GameBoard | WebSocket]]:
+    ) -> Optional[dict[str, GameBoard | WebSocket | str]]:
         """
         Get other user from rooms dictionary
 
@@ -108,6 +108,7 @@ class SeaBattleManager:
         """
         for username_other in self.rooms[room_id]:
             if username != username_other:
+                self.rooms[room_id][username_other]['username'] = username_other
                 return self.rooms[room_id][username_other]
         return None
 
@@ -122,6 +123,12 @@ class SeaBattleManager:
             if not self.rooms[room_id][username]['game_board'].is_game_over:
                 return username
         raise ValueError()
+
+    async def get_first_move_username(self, room_id: str) -> str:
+        return next(
+            username for username in self.rooms[room_id]
+            if self.rooms[room_id][username]['is_turn']
+        )
 
     async def remove_room(self, room_id: str) -> None:
         """
@@ -149,14 +156,12 @@ class SeaBattleManager:
         if len(self.rooms[room_id]) != 2:
             return False
         user_ships_and_game_initialized = all(
-            (
-                self.rooms
-                [room_id][user]['game_board']
-                .is_all_ships_placed_and_game_initialized
-                for user in self.rooms[room_id]
-            )
+            self.rooms
+            [room_id][user]['game_board']
+            .is_all_ships_placed_and_game_initialized
+            for user in self.rooms[room_id]
         )
-        return len(self.rooms[room_id]) == 2 and user_ships_and_game_initialized
+        return user_ships_and_game_initialized
 
     async def _setdefault_connection(
         self,
