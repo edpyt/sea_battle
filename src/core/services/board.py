@@ -169,9 +169,7 @@ class GameBoardPlayerMove(GameBoardSetShip):
 
         if (x, y) in self.moves[cell]:
             raise HaveBeenMoveHere()
-
-        is_hited: bool = cell.value
-
+        is_hited: bool = type(cell) is Ship
         if is_hited:
             self.moves[cell].append((x, y))
             self.check_is_drowned(cell)
